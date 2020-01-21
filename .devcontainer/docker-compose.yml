@@ -11,6 +11,13 @@ services:
       - "36032:6032" # admin sqlite interface
       - "33306:3306" # proxy to mysql-m1
 
+  mysql-m1-binlogreader:
+    image: "renecannao/proxysql_mysqlbinlog:ubuntu18"
+    command:
+      /proxysql_binlog_reader -h mysql-m1 -u root -l 3310 -f
+    ports:
+      - "22111:3310"
+
   mysql-m1:
     image: "percona:5.7-jessie"
     volumes:
@@ -57,7 +64,7 @@ services:
     # host.docker.internal
     image: "renecannao/proxysql_mysqlbinlog:ubuntu18"
     command:
-      "/bin/bash -c 'sleep 15 && /proxysql_binlog_reader -h mysql-s1 -u root -l 3310 -f'"
+      /proxysql_binlog_reader -h mysql-s1 -u root -l 3310 -f
     ports:
       - "22211:3310"
 
@@ -85,7 +92,7 @@ services:
   mysql-s2-binlogreader:
     image: "renecannao/proxysql_mysqlbinlog:ubuntu18"
     command:
-      "/bin/bash -c 'sleep 15 && /proxysql_binlog_reader -h mysql-s2 -u root -l 3310 -f'"
+      /proxysql_binlog_reader -h mysql-s2 -u root -l 3310 -f
     ports:
       - "22212:3310"
 
@@ -113,7 +120,7 @@ services:
   mysql-s3-binlogreader:
     image: "renecannao/proxysql_mysqlbinlog:ubuntu18"
     command:
-      "/bin/bash -c 'sleep 15 && /proxysql_binlog_reader -h mysql-s3 -u root -l 3310 -f'"
+      /proxysql_binlog_reader -h mysql-s3 -u root -l 3310 -f
     ports:
       - "22213:3310"
 
@@ -142,6 +149,6 @@ services:
   mysql-s4-binlogreader:
     image: "renecannao/proxysql_mysqlbinlog:ubuntu18"
     command:
-      "/bin/bash -c 'sleep 15 && /proxysql_binlog_reader -h mysql-s4 -u root -l 3310 -f'"
+      /proxysql_binlog_reader -h mysql-s4 -u root -l 3310 -f
     ports:
       - "22214:3310"
