@@ -8,6 +8,7 @@
 #include "MySQL_Data_Stream.h"
 #include "query_processor.h"
 #include "MySQL_PreparedStatement.h"
+#include "MySQL_HostGroupManager.h"
 #include "MySQL_Logger.hpp"
 #include "StatCounters.h"
 #include "MySQL_Authentication.hpp"
@@ -473,6 +474,7 @@ MySQL_Session::MySQL_Session() {
 	//gtid_trxid = 0;
 	gtid_hid = -1;
 	memset(gtid_buf,0,sizeof(gtid_buf));
+	memset(sticky_gtid,0,sizeof(sticky_gtid));
 
 	match_regexes=NULL;
 /*
@@ -6482,6 +6484,10 @@ void MySQL_Session::handler___client_DSS_QUERY_SENT___server_DSS_NOT_INITIALIZED
 						gtid_uuid = _gtid_from_backend->gtid_uuid;
 					}
 				}
+			} else if (this->sticky_gtid) {
+				// this session has already accessed a replica with a certain GTID.
+				// let's stick it to backends with GTID that's no less than that.
+				gtid_uuid = this->sticky_gtid;
 			}
 
 			char *sep_pos = NULL;
@@ -6521,6 +6527,16 @@ void MySQL_Session::handler___client_DSS_QUERY_SENT___server_DSS_NOT_INITIALIZED
 		if (mc) {
 			mybe->server_myds->attach_connection(mc);
 			thread->status_variables.ConnPool_get_conn_success++;
+
+			// memoize GTID of the host that this session has accessed
+			std::string host = mc->userinfo->address;
+			host.append(":");
+			host.append(std::to_string(mysrvc->port));
+			gtid_found = MyHGM->gtid_map[host];
+			if (gtid_found) {
+				// TODO: convert from std::string to *char
+				this->sticky_gtid = gtid_executed_to_string(gtid_found);
+			}
 		} else {
 			thread->status_variables.ConnPool_get_conn_failure++;
 		}

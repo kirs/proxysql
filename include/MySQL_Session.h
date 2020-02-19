@@ -225,6 +225,8 @@ class MySQL_Session
 	//uint64_t gtid_trxid;
 	int gtid_hid;
 
+	char sticky_gtid[128];
+
 	MySQL_STMTs_meta *sess_STMTs_meta;
 	StmtLongDataHandler *SLDH;
 
